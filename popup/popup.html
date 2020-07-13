@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="../css/popup.css">
+    <link rel="stylesheet" href="../css/zui.min.css">
+    <title>163</title>
+</head>
+<body>
+
+<div class="console">
+    <div class="top"><p>设置</p></div>
+    <div class="switch autoLogin">
+        <input type="checkbox" id="allowAutoLogin">
+        <label>允许自动登陆</label>
+    </div>
+
+    <div class="addAccount">
+        <div class="label">添加账号</div>
+        <div>
+            <input placeholder="账号或手机号" id="account" type="text">
+        </div>
+
+        <div>
+            <input placeholder="密码" id="password" type="password">
+            <button id="add">添加</button>
+        </div>
+
+
+    </div>
+    <div class="currentAccount">
+        <div class="label">当前账号</div>
+        <div id="current"></div>
+
+    </div>
+    <div class="chooseAccount">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>选中</th>
+                <th>账户名</th>
+                <th>删除</th>
+            </tr>
+            </thead>
+            <tbody class="list">
+            <!--            <tr>-->
+            <!--                <td>...</td>-->
+            <!--                <td>...</td>-->
+            <!--                <td>...</td>-->
+            <!--            </tr>-->
+            </tbody>
+        </table>
+
+    </div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

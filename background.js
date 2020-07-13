@@ -34,6 +34,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
 })
 
 
+//往用户数组增加新的账号信息
 function add({user}) {
     chrome.storage.local.get(["accountInfo"], arr => {
         let accountArray = arr["accountInfo"] ? arr["accountInfo"] : [];
@@ -54,6 +55,7 @@ function add({user}) {
     })
 }
 
+//从账户数组移除用户
 function remove({deleteAccount}) {
     chrome.storage.local.get(["accountInfo"], arr => {
         let accountArray = arr["accountInfo"];

@@ -28,7 +28,7 @@ chrome.storage.local.get(["switch"], function (result) {
 });
 
 
-// 显示一键登录按钮
+// 显示一键登录按钮在163页面上
 AutoLoginBtn.addEventListener("click", function () {
 
     if (currentTab) {
@@ -39,10 +39,11 @@ AutoLoginBtn.addEventListener("click", function () {
     }
 });
 
-//读取当前账户并显示
+//读取当前账户并显示在popup上
 setTimeout(function () {
     chrome.extension.getBackgroundPage().getCurrentAccount().then(
         result => {
+            console.log(result);
             if (result.currentAccount) {
                 currentLine.innerHTML = `<td>${result.currentAccount}</td>`;
             } else {
@@ -53,7 +54,7 @@ setTimeout(function () {
 }, 100);
 
 
-//读取已记录的账号并显示
+//读取已记录的账号并显示在popup上
 
     chrome.extension.sendMessage({displayAll:'displayArr'},function (response) {
        let accountInfo = response.accountInfo;
@@ -72,6 +73,8 @@ setTimeout(function () {
        }
     });
 
+
+    //添加账号按钮绑定动作
 add.addEventListener('click', function () {
 
     if ((account.value) && (password.value)) {
@@ -82,6 +85,7 @@ add.addEventListener('click', function () {
             console.log(response);
         });
 
+        //发送账号信息到background后，拉取更新后的用户数组，更新列表
         setTimeout(function () {
             chrome.extension.getBackgroundPage().getAccountInfo().then(result => {
                     console.log(result);
@@ -141,12 +145,14 @@ function addToList(account) {
     })
 }
 
-
+//取消选中，发送取消信息到background
 function label_Dark(){
     currentLine.innerHTML = `<td></td>`;
     chrome.extension.sendMessage({currentAccount: ' ',labeled:false});
     return "/icon/g2.png";
 }
+
+//选中，发送选中信息到background
 function label_light(account){
     currentLine.innerHTML = `<td>${account}</td>`;
     chrome.extension.sendMessage({currentAccount: account,labeled:true});

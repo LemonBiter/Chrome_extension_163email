@@ -1,89 +1,140 @@
-*{
+* {
     margin: 0;
-    padding: 0
+    padding: 0;
 }
 
-.console{
+
+.console {
+    padding: 10px 30px;
     width: 300px;
+    font-family: "PingFang SC";
+}
+
+
+.autoLogin {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#allowAutoLogin {
+    cursor: pointer;
+}
+
+.addAccount {
+    /*border: 1px solid black;*/
+    margin-bottom: 10px;
 
 }
-.console .top{
+
+.account_div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.account_div input {
+    outline: none;
+    border: none;
+    border-bottom: 1px solid rgb(229, 229, 229);
+    width: 100%;
+}
+
+.password_div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.password_div input {
+    outline: none;
+    border: none;
+    border-bottom: 1px solid rgb(229, 229, 229);
+    width: 100%;
+}
+
+.btn-div {
+    width: 100%;
     display: flex;
     justify-content: center;
-    align-items: center;
-    background: rgb(30,28,28);
+}
+
+
+#add {
+    margin: 10px;
+    border-radius: 20px;
+    padding: 8px 50px;
+    cursor: pointer;
+    border: none;
     color: #ffffff;
-    font-size: 16px;
-    height: 50px;
+    outline: none;
 }
 
-.autoLogin{
-    border: 1px solid lightgray;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: 30px
-}
-
-.addAccount{
-    border: 1px solid lightgray;
+.currentAccount {
+    margin-bottom: 5px;
+    height: 60px;
+    border-bottom: 1px solid rgb(229, 229, 229);
     display: grid;
-    grid-template-rows: 40px 30px 30px;
+    grid-template-columns: 30% auto;
+    grid-template-rows: 1fr;
+
+
 }
 
-.label{
-    padding-left: 20px;
-    font-size: 16px;
-    font-weight: 700;
+.currentAccount .current_account {
+
 }
-.addAccount div{
+
+.currentAccount #current {
+
+    overflow-x: auto;
     display: flex;
-    align-items: center;
-    padding-left: 20px;
-    border-bottom: 1px solid rgb(247,247,247);
-}
-#submit{
-    margin-left: 50px;
-    padding: 4px 10px;
+    justify-content: center;
 }
 
-.currentAccount{
-    display: grid;
-    grid-template-rows: 40px 50px;
-}
-.currentAccount div{
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid rgb(247,247,247);
-}
-
-.chooseAccount{
-    display: grid;
-    grid-template-rows: 40px 40px;
+.chooseAccount {
+    overflow: hidden;
+    width: 240px;
+    padding-left: 15px;
+    margin-left: -7px;
 }
 
 
-.chooseAccount .detail{
-    height: 20px;
-    display: flex;
-    justify-content: space-around;
+.chooseAccount table, .chooseAccount table th {
+    text-align: center;
 }
-.selected i img{
+
+.account_arr {
+    width: 240px;
+    display: block;
+    height: 115px;
+    overflow-y: auto;
+}
+
+.account_arr tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+
+.selected i img {
     width: 20px;
     height: 20px;
 }
-.delete i img{
+
+.delete i img {
     width: 20px;
     height: 20px;
 }
-.account_number{
+
+.account_number {
     width: 60%;
     background: lightgray;
 }
 
-.list{
-    overflow: scroll;
-}
 
 .icon {
     width: 20px;

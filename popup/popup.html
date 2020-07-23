@@ -12,32 +12,35 @@
 <body>
 
 <div class="console">
-    <div class="top"><p>设置</p></div>
     <div class="switch autoLogin">
-        <input type="checkbox" id="allowAutoLogin">
-        <label>允许自动登陆</label>
+        <input type="checkbox" id="allowAutoLogin" name="allowAutoLogin">
+        <label for="allowAutoLogin">允许自动登陆</label>
     </div>
 
     <div class="addAccount">
-        <div class="label">添加账号</div>
-        <div>
-            <input placeholder="账号或手机号" id="account" type="text">
+        <div class="account_div">
+            <h4>账号</h4>
+            <input id="account" type="text">
         </div>
 
-        <div>
-            <input placeholder="密码" id="password" type="password">
-            <button id="add">添加</button>
+        <div class="password_div">
+            <h4>密码</h4>
+            <input id="password" type="password">
+
         </div>
-
-
+        <div class="btn-div">
+        <button class="btn btn-primary addBtn" id="add">添加</button>
+        </div>
     </div>
     <div class="currentAccount">
-        <div class="label">当前账号</div>
-        <div id="current"></div>
+        <h4 class="current_account">当前账号</h4>
+        <div id="current">
+
+        </div>
 
     </div>
     <div class="chooseAccount">
-        <table class="table">
+        <table class="table table-fixed table-borderless">
             <thead>
             <tr>
                 <th>选中</th>
@@ -45,7 +48,7 @@
                 <th>删除</th>
             </tr>
             </thead>
-            <tbody class="list">
+            <tbody class="account_arr">
             <!--            <tr>-->
             <!--                <td>...</td>-->
             <!--                <td>...</td>-->
@@ -53,7 +56,6 @@
             <!--            </tr>-->
             </tbody>
         </table>
-
     </div>
 </div>
 <script src="popup.js"></script>

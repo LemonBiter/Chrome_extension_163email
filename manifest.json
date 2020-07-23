@@ -1,6 +1,6 @@
 {
   "name": "163 email autoLoin",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "自动登陆你的163邮箱。",
   "manifest_version": 2,
   "background": {
@@ -22,17 +22,18 @@
     }
   ],
   "icons": {
-    "16": "popup/icon.png",
-    "48": "popup/icon.png",
-    "128": "popup/icon.png"
+    "16": "icon/extension_icon_blue.png",
+    "48": "icon/extension_icon_blue.png",
+    "128": "icon/extension_icon_blue.png"
   },
   "browser_action": {
     "default_title": "163 Login page",
-    "default_icon": "popup/icon.png",
+    "default_icon": "icon/extension_icon_blue.png",
     "default_popup": "popup/popup.html"
   },
   "permissions": [
     "activeTab",
+    "tabs",
     "storage"
   ]
 }

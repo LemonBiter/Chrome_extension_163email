@@ -1,69 +1,140 @@
-let d = document.createElement("button");
-d.innerText = "一键登录";
-let dStyle = "background: #3280fc;color: #ffffff;padding: 3px 6px; border-radius: 6px;margin-left: 10px;"
-d.setAttribute("style",dStyle);
-document.body.before(d);
+class StorageHelper {
+  constructor() {}
 
+  getCurrentFromDataBase() {
+    let selectedAccount = new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage("selectedAccount", (data) => {
+        resolve(JSON.parse(data));
+      });
+    });
+    return selectedAccount;
+  }
 
-chrome.storage.local.get(["display"], function (result) {
-    if (!result.display) {
-        d.style.display = 'none';
+  getDate(key) {
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get([key], (result) => {
+        resolve(result[key]);
+      });
+    });
+  }
+
+  setData(request) {
+    chrome.storage.local.set(JSON.parse(request));
+  }
+
+  listen(callback, targetEl) {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      this.setData(request);
+      let value = JSON.parse(request);
+
+      callback(value.enableLogin, targetEl);
+    });
+  }
+}
+
+//维护单一button
+class SubmitButton {
+  constructor() {
+    const rooEl = document.createElement("button");
+    this.rooEl = rooEl;
+    this.updateBtnText("一键登录");
+    this.btnStyling();
+
+    //将点击事件传给父级
+    this.rooEl.addEventListener("click", () => {
+      this.onClick();
+    });
+
+    document.body.before(this.rooEl);
+  }
+
+  //更改内容
+  updateBtnText(text) {
+    this.rooEl.innerText = text;
+  }
+  //通过class 添加按钮样式
+  btnStyling() {
+    this.rooEl.className += " submitBtn";
+  }
+}
+
+class App {
+  constructor() {
+    this.initAutoLoginBtn();
+  }
+
+  //初始化登录按钮
+  initAutoLoginBtn() {
+    // 新建按钮，添加点击事件
+    const submitBtn = new SubmitButton();
+    submitBtn.onClick = () => {
+      this.handleSubmitClick();
+    };
+    this.submitBtn = submitBtn;
+    //初始化按钮显示
+    this.initBtnDisplay();
+  }
+
+  handleSubmitClick() {
+    //从数据库拿取当前账号的信息, 执行登录操作
+    let getInfo = new StorageHelper();
+
+    getInfo.getCurrentFromDataBase().then((account) => {
+      this.checkAccountExist(account);
+      this.applySelectedAccount(account);
+    });
+  }
+
+  checkAccountExist({ currentAccount }) {
+    if (!currentAccount["account"]) {
+      this.submitBtn.updateBtnText("未选中账号");
+      setTimeout(() => {
+        this.submitBtn.updateBtnText("一键登录");
+      }, 2 * 1000);
+    } else {
+      this.submitBtn.updateBtnText("登录中...");
+      setTimeout(() => {
+        this.submitBtn.updateBtnText("一键登录");
+      }, 2 * 1000);
     }
-});
+  }
 
-let accountDetails;
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log(request);
-    if (typeof request == "object") {
-        accountDetails = request;
-    } else if (typeof request == "boolean") {
-        chrome.storage.local.set({display: request});
-        if (request) {
-            d.style.display = 'block'
-        } else {
-            d.style.display = 'none'
-        }
-    }
+  applySelectedAccount({ currentAccount }) {
+    if (!currentAccount.account) return;
+    this.initTargetEl();
+    this.targetAccountInputEl.value = currentAccount["account"];
+    this.targetPwdInputEl.value = currentAccount["password"];
+    this.targetLoginBtnEl.click();
+  }
 
-    sendResponse("Copy that");
-});
+  //初始化登录框等元素
+  initTargetEl() {
+    const targetAccountInputEl = document.querySelectorAll("input")[0];
+    const targetPwdInputEl = document.querySelector("input[name='password']");
+    const targetLoginBtnEl = document.querySelector("#dologin");
+    this.targetAccountInputEl = targetAccountInputEl;
+    this.targetPwdInputEl = targetPwdInputEl;
+    this.targetLoginBtnEl = targetLoginBtnEl;
+  }
 
+  //初始化按钮显示，同时监听按钮显示变化
+  initBtnDisplay() {
+    let enableLogin = new StorageHelper();
+    enableLogin
+      .getDate("enableLogin")
+      .then((value) => this.changeBtnDisplay(value, this.submitBtn));
+    this.btnDisplayListener();
+  }
 
-//点击从background获取当前用户数据
-d.addEventListener("click", () => {
+  btnDisplayListener() {
+    let enableLogin = new StorageHelper();
+    enableLogin.listen(this.changeBtnDisplay, this.submitBtn);
+  }
 
+  changeBtnDisplay(value, btnEl) {
+    btnEl.rooEl.style.display = value ? "block" : "none";
+  }
+}
 
-    chrome.runtime.sendMessage({
-        getData:'give me current account info'
-    },response=>{
-        //填入输入框并点击按钮
-        console.log(response);
-        if (response) {
-            d.innerText = "登陆中...";
-            setTimeout(()=>{
-                d.innerText = "一键登录";
-            },1000);
-            let accountInput = document.querySelectorAll("input")[0];
-            accountInput.value = response.account;
-
-            let passwordInput = document.querySelector("input[name='password']");
-            passwordInput.value = response.password;
-
-            let clickBtn = document.querySelector("#dologin");
-            clickBtn.click();
-        }
-        else{
-            d.innerText = "未选中账号";
-            setTimeout(()=>{
-                d.innerText = "一键登录";
-            },500);
-        }
-
-
-    })
-
-
-});
-
-
-
+//主入口
+new App();

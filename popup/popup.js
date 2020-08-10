@@ -30,7 +30,8 @@ chrome.storage.local.get(["switch"], function (result) {
 AutoLoginBtn.addEventListener("click", function () {
     if (currentTab) {
         chrome.storage.local.set({switch: AutoLoginBtn.checked});
-        chrome.tabs.sendMessage(currentTab.id, AutoLoginBtn.checked, response => {
+        let displayBtn = {enableLogin:AutoLoginBtn.checked}
+        chrome.tabs.sendMessage(currentTab.id, JSON.stringify(displayBtn), response => {
         });
 
     }
@@ -173,3 +174,20 @@ function label_light(thisAccount) {
 
     return "/icon/g1.png";
 }
+
+
+
+
+
+class App{
+    constructor(){
+        this.show();
+    }
+
+    show(){
+        console.log(this,123321);
+    }
+
+}
+
+new App();

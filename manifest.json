@@ -18,6 +18,9 @@
       "js": [
         "iframe.js"
       ],
+      "css":[
+        "/css/iframe.css"
+      ],
       "run_at": "document_end"
     }
   ],

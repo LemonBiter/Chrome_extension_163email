@@ -16,19 +16,19 @@
 //     });
 // })
 
-
-
 chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
   const KEEP_CHANNEL_OPEN = true;
 
   console.log(request);
 
-  if (request === "selectedAccount") {
-    chrome.storage.local.get(["currentAccount"], function (result) {
-      let currentAccountString = JSON.stringify(result);
-      sendRequest(currentAccountString);
-    });
-  }
+
+  // if (request === "selectedAccount") {
+  //   chrome.storage.local.get(["currentAccount"], function (result) {
+  //     let currentAccountString = JSON.stringify(result);
+  //     sendRequest(currentAccountString);
+  //   });
+  // }
+
 
   //向数据库增加用户
   if (request.addAccount) {
@@ -43,21 +43,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
     update(request);
   }
 
-  //等待被popup.js call，用于展示已记录账号
-  else if (request.displayAll) {
-    chrome.storage.local.get(["accountInfo", "currentAccount"], function (
-      result
-    ) {
-      sendRequest(result);
-    });
-  } else if (request.currentAccount) {
+   else if (request.currentAccount) {
     let thisAccount = request.currentAccount;
     if (thisAccount.label) {
-      chrome.storage.local.set({ currentAccount: thisAccount }, function () {
-      });
+      chrome.storage.local.set({ currentAccount: thisAccount }, function () {});
     } else {
-      chrome.storage.local.set({ currentAccount: thisAccount }, function () {
-      });
+      chrome.storage.local.set({ currentAccount: thisAccount }, function () {});
     }
   } else if (request.getCurrentAccount) {
     chrome.storage.local.get(["currentAccount"], function (result) {
@@ -84,16 +75,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
   return KEEP_CHANNEL_OPEN;
 });
 
-
 //往用户数组增加新的账号信息
 function add({ addAccount }) {
-  console.log(addAccount);
+  addAccount = JSON.parse(addAccount);
   chrome.storage.local.get(["accountInfo"], (arr) => {
+    console.log(arr);
     let accountArray = arr["accountInfo"] ? arr["accountInfo"] : [];
     accountArray.push(addAccount);
 
-    chrome.storage.local.set({ accountInfo: accountArray }, function () {
-    });
+    chrome.storage.local.set({ accountInfo: accountArray }, function () {});
   });
 }
 
@@ -104,8 +94,7 @@ function remove({ deleteAccount }) {
     let newAccountArray = accountArray.filter(
       (each) => each.userId !== deleteAccount.userId
     );
-    chrome.storage.local.set({ accountInfo: newAccountArray }, function () {
-    });
+    chrome.storage.local.set({ accountInfo: newAccountArray }, function () {});
     if (arr["currentAccount"].userId === deleteAccount.userId) {
       chrome.storage.local.set({
         currentAccount: { account: "", password: "", userId: 0, label: "" },
@@ -125,28 +114,85 @@ function update({ updateAccount }) {
         each.label = false;
       }
     });
-    chrome.storage.local.set({ accountInfo: accountArray }, function () {
-    });
+    chrome.storage.local.set({ accountInfo: accountArray }, function () {});
   });
 }
 
 
+/******************************************************************** */
+
+class Database {
+  constructor() {
+    this.listen();
+  }
+
+  listen() {
+    const DATABASE = this;
+
+    chrome.runtime.onMessage.addListener(function (request,sender,sendResponse) {
+      const KEEP_CHANNEL_OPEN = true;
 
 
-class Database{
-    constructor(){
-    }
 
-    listen(){
-        console.log('start listening');
-        chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
-            console.log(request,"frome database");
-        });
-    }
-};
+      function databaseOperator(request){
+       if(Object.keys(request).length!==1){
+         return;
+       }
+
+       let ins = Object.keys(request)[0];
+
+        const instructionArr = {
+          // 每次打开popup，取出数据显示全部账号
+          displayArr: function(){
+            DATABASE.getStorage(["accountInfo", "currentAccount"],sendResponse);
+          },
+          // 每次打开popup，取出数据显示当前选中账号
+          selectedAccount: function(){
+            DATABASE.getStorage(["accountInfo", "currentAccount"],sendResponse);
+          },
+          addAccount:function(){
+            DATABASE.setStorage(request.addAccount);
+          }
+        }
 
 
 
+        return instructionArr[ins]||(()=>console.log('Instruction not found.'));
+      }
+
+
+      databaseOperator(request)();
+
+
+
+
+
+
+      return KEEP_CHANNEL_OPEN;
+    });
+  }
+
+
+
+  getStorage(key,callback){
+
+    chrome.storage.local.get(key, function (result) {
+      callback(result);
+    });
+  }
+
+  setStorage(value){
+
+    chrome.storage.local.get(["accountInfo"],allArr =>{
+      //确认是否有用户数组存在，不存在就创建一个
+      let accountArray = allArr["accountInfo"]?allArr["accountInfo"] : [];
+      accountArray.push(value);
+      chrome.storage.local.set({accountInfo:accountArray})
+    })
+
+  }
+
+}
 
 
 
@@ -156,15 +202,11 @@ class Background {
     this.blueRedIcon();
   }
 
-  handleDatabase(){
+  handleDatabase() {
+       //数据库开始监听
     let database = new Database();
     this.database = database;
-    //数据库开始监听
-    this.database.listen();
   }
-
-
-
 
   blueRedIcon() {
     //监听当前页面，小图标红蓝切换
@@ -188,10 +230,6 @@ class Background {
       );
     });
   }
-
 }
-
-
-
 
 new Background();

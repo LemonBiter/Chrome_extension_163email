@@ -50,7 +50,7 @@ chrome.extension.sendMessage({getCurrentAccount:'get'}, function ({currentAccoun
 
 //读取已记录的账号并显示在popup上
 
-chrome.extension.sendMessage({displayAll: 'displayArr'}, function ({accountInfo,currentAccount}) {
+chrome.extension.sendMessage({displayArr:"displayArr"}, function ({accountInfo,currentAccount}) {
 
     if (accountInfo) {
         list.innerHTML = "";
@@ -85,7 +85,8 @@ function accountAdding() {
             label: false
         }
 
-        chrome.extension.sendMessage({addAccount: thisAccount}, function (response) {
+
+        chrome.extension.sendMessage({addAccount: JSON.stringify(thisAccount)}, function (response) {
             console.log('this is the :',response);
         });
 

@@ -3,7 +3,8 @@ class StorageHelper {
 
   getCurrentFromDataBase() {
     let selectedAccount = new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage("selectedAccount", (data) => {
+      chrome.runtime.sendMessage({selectedAccount:"selectedAccount"}, (data) => {
+        console.log(data);
         resolve(JSON.parse(data));
       });
     });

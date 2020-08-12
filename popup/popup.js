@@ -51,10 +51,14 @@ chrome.extension.sendMessage({getCurrentAccount:'get'}, function ({currentAccoun
 //读取已记录的账号并显示在popup上
 
 chrome.extension.sendMessage({displayArr:"displayArr"}, function ({accountInfo,currentAccount}) {
-
     if (accountInfo) {
+
+        console.log(accountInfo);
         list.innerHTML = "";
         accountInfo.forEach(each => {
+            console.log(each);
+            each = JSON.parse(each);
+            console.log(each);
             addToList(each);
         })
     }
@@ -86,13 +90,14 @@ function accountAdding() {
         }
 
 
-        chrome.extension.sendMessage({addAccount: JSON.stringify(thisAccount)}, function (response) {
+        chrome.extension.sendMessage({addAccount: thisAccount}, function (response) {
             console.log('this is the :',response);
         });
 
         //发送账号信息到background后，拉取更新后的用户数组，更新列表
         setTimeout(function () {
             chrome.extension.sendMessage({displayAll: "displayArr"}, function ({accountInfo}) {
+                accountInfo = JSON.parse(accountInfo);
                 list.innerHTML = "";
                 accountInfo.forEach(eachAccount => {
                     addToList(eachAccount);
@@ -164,14 +169,14 @@ function addToList(thisAccount) {
 //取消选中，发送取消信息到background
 function label_Dark() {
     currentLine.innerHTML = `<td></td>`;
-    chrome.extension.sendMessage({currentAccount:{account:'',label: false} });
+    chrome.extension.sendMessage({labelRecord:{account:'',label: false} });
     return "/icon/g2.png";
 }
 
 //选中，发送选中信息到background
 function label_light(thisAccount) {
     currentLine.innerHTML = `<h4>${thisAccount.account}</h4>`;
-    chrome.extension.sendMessage({currentAccount: thisAccount});
+    chrome.extension.sendMessage({labelRecord: thisAccount});
 
     return "/icon/g1.png";
 }

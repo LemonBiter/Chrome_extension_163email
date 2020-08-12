@@ -21,7 +21,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
 
   console.log(request);
 
-
   // if (request === "selectedAccount") {
   //   chrome.storage.local.get(["currentAccount"], function (result) {
   //     let currentAccountString = JSON.stringify(result);
@@ -29,28 +28,31 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
   //   });
   // }
 
-
   //向数据库增加用户
-  if (request.addAccount) {
-    add(request);
-  }
+  // if (request.addAccount) {
+  //   add(request);
+  // }
   //从数据库删减用户
-  else if (request.deleteAccount) {
-    remove(request);
-  }
+  // if (request.deleteAccount) {
+  //   remove(request);
+  // }
   //更新账户的选中或未选中信息
-  else if (request.updateAccount) {
+  if (request.updateAccount) {
     update(request);
   }
 
-   else if (request.currentAccount) {
-    let thisAccount = request.currentAccount;
-    if (thisAccount.label) {
-      chrome.storage.local.set({ currentAccount: thisAccount }, function () {});
-    } else {
-      chrome.storage.local.set({ currentAccount: thisAccount }, function () {});
-    }
-  } else if (request.getCurrentAccount) {
+  // if (request.currentAccount) {
+  //   let thisAccount = request.currentAccount;
+  //   if (thisAccount.label) {
+  //     chrome.storage.local.set({ currentAccount: thisAccount }, function () {});
+  //   } else {
+  //     chrome.storage.local.set({ currentAccount: thisAccount }, function () {});
+  //   }
+  // }
+
+
+
+  else if (request.getCurrentAccount) {
     chrome.storage.local.get(["currentAccount"], function (result) {
       sendRequest(result);
     });
@@ -76,32 +78,33 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendRequest) {
 });
 
 //往用户数组增加新的账号信息
-function add({ addAccount }) {
-  addAccount = JSON.parse(addAccount);
-  chrome.storage.local.get(["accountInfo"], (arr) => {
-    console.log(arr);
-    let accountArray = arr["accountInfo"] ? arr["accountInfo"] : [];
-    accountArray.push(addAccount);
+// function add({ addAccount }) {
+//   addAccount = JSON.parse(addAccount);
+//   chrome.storage.local.get(["accountInfo"], (arr) => {
 
-    chrome.storage.local.set({ accountInfo: accountArray }, function () {});
-  });
-}
+//     let accountArray = arr["accountInfo"] ? arr["accountInfo"] : [];
+//     accountArray.push(addAccount);
+
+//     chrome.storage.local.set({ accountInfo: accountArray }, function () {});
+//   });
+// }
 
 //从账户数组移除用户
-function remove({ deleteAccount }) {
-  chrome.storage.local.get(["accountInfo", "currentAccount"], (arr) => {
-    let accountArray = arr["accountInfo"];
-    let newAccountArray = accountArray.filter(
-      (each) => each.userId !== deleteAccount.userId
-    );
-    chrome.storage.local.set({ accountInfo: newAccountArray }, function () {});
-    if (arr["currentAccount"].userId === deleteAccount.userId) {
-      chrome.storage.local.set({
-        currentAccount: { account: "", password: "", userId: 0, label: "" },
-      });
-    }
-  });
-}
+
+// function remove({ deleteAccount }) {
+//   chrome.storage.local.get(["accountInfo", "currentAccount"], (arr) => {
+//     let accountArray = arr["accountInfo"];
+//     let newAccountArray = accountArray.filter(
+//       (each) => each.userId !== deleteAccount.userId
+//     );
+//     chrome.storage.local.set({ accountInfo: newAccountArray }, function () {});
+//     if (arr["currentAccount"].userId === deleteAccount.userId) {
+//       chrome.storage.local.set({
+//         currentAccount: { account: "", password: "", userId: 0, label: "" },
+//       });
+//     }
+//   });
+// }
 
 //储存账户的选中与取消选中标记
 function update({ updateAccount }) {
@@ -118,7 +121,6 @@ function update({ updateAccount }) {
   });
 }
 
-
 /******************************************************************** */
 
 class Database {
@@ -129,72 +131,104 @@ class Database {
   listen() {
     const DATABASE = this;
 
-    chrome.runtime.onMessage.addListener(function (request,sender,sendResponse) {
+    chrome.runtime.onMessage.addListener(function (
+      request,
+      sender,
+      sendResponse
+    ) {
       const KEEP_CHANNEL_OPEN = true;
 
+      //监听到指令就立即执行
+      databaseOperator(request)();
 
+      function databaseOperator(request) {
 
-      function databaseOperator(request){
-       if(Object.keys(request).length!==1){
-         return;
-       }
+        if (Object.keys(request).length !== 1) {
+          return;
+        }
 
-       let ins = Object.keys(request)[0];
+        let ins = Object.keys(request)[0];
 
+        //定义一个指令集，接收不同指令返回不同function
         const instructionArr = {
           // 每次打开popup，取出数据显示全部账号
-          displayArr: function(){
+          displayArr: function () {
             DATABASE.getStorage(["accountInfo", "currentAccount"],sendResponse);
           },
           // 每次打开popup，取出数据显示当前选中账号
-          selectedAccount: function(){
-            DATABASE.getStorage(["accountInfo", "currentAccount"],sendResponse);
+          selectedAccount: function () {
+            DATABASE.getStorage(
+              ["accountInfo", "currentAccount"],
+              sendResponse
+            );
           },
-          addAccount:function(){
+          addAccount: function () {
             DATABASE.setStorage(request.addAccount);
+          },
+          deleteAccount: function () {
+            DATABASE.deleteStorage(request.deleteAccount);
+          },
+          labelRecord: function(){
+            DATABASE.getLabelRecord(request.labelRecord);
           }
-        }
+        };
 
-
-
-        return instructionArr[ins]||(()=>console.log('Instruction not found.'));
+        return (
+          instructionArr[ins] || (() => console.log("Instruction not found."))
+        );
       }
-
-
-      databaseOperator(request)();
-
-
-
-
-
 
       return KEEP_CHANNEL_OPEN;
     });
   }
 
-
-
-  getStorage(key,callback){
-
+  getStorage(key, callback) {
     chrome.storage.local.get(key, function (result) {
       callback(result);
     });
   }
 
-  setStorage(value){
-
-    chrome.storage.local.get(["accountInfo"],allArr =>{
+  setStorage(value) {
+    console.log(value);
+    chrome.storage.local.get(["accountInfo"], (storager) => {
       //确认是否有用户数组存在，不存在就创建一个
-      let accountArray = allArr["accountInfo"]?allArr["accountInfo"] : [];
-      accountArray.push(value);
-      chrome.storage.local.set({accountInfo:accountArray})
+      let accountInfo = storager["accountInfo"] ? storager["accountInfo"] : [];
+
+      accountInfo.push(JSON.stringify(value));
+
+      chrome.storage.local.set({ accountInfo });
+    });
+  }
+
+  deleteStorage(dele) {
+    chrome.storage.local.get(["accountInfo", "currentAccount"], (storager) => {
+      let accountArray = storager["accountInfo"];
+      let newAccountArray = accountArray.filter((each) => {
+        return JSON.parse(each).userId !== dele.userId;
+      });
+      newAccountArray.map((each) => JSON.stringify(each));
+      chrome.storage.local.set({ accountInfo: newAccountArray });
+
+      if (dele.userId === storager["currentAccount"].userId) {
+        chrome.storage.local.set({ currentAccount: "none" });
+      }
+    });
+  }
+
+  //获取账号是否选中的标记信息
+  getLabelRecord(account){
+
+    chrome.storage.local.get(["currentAccount"],current =>{
+      if(current.userId!== account.userId){
+        chrome.storage.local.set({currentAccount:account});
+      }
+      else{
+        chrome.storage.local.set({currentAccount:{account:'',password:'',userId:0,label:false}})
+      }
     })
 
   }
-
 }
-
-
 
 class Background {
   constructor() {
@@ -203,7 +237,7 @@ class Background {
   }
 
   handleDatabase() {
-       //数据库开始监听
+    //数据库开始监听
     let database = new Database();
     this.database = database;
   }

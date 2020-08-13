@@ -3,7 +3,7 @@ class StorageHelper {
 
   getCurrentFromDataBase() {
     let selectedAccount = new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({selectedAccount:"selectedAccount"}, (data) => {
+      chrome.runtime.sendMessage({currentAccount:"currentAccount"}, (data) => {
        resolve(data);
       });
     });
@@ -57,6 +57,8 @@ class SubmitButton {
     this.rooEl.className += " submitBtn";
   }
 }
+
+
 
 class App {
   constructor() {

@@ -10,12 +10,8 @@ class Database {
     const DATABASE = this;
 
 
-    //开始监听传指令
-    chrome.runtime.onMessage.addListener(function (
-      request,
-      sender,
-      sendResponse
-    ) {
+    //开始监听指令
+    chrome.runtime.onMessage.addListener(function (request,sender,sendResponse) {
       const KEEP_CHANNEL_OPEN = true;
 
       //监听到指令立即放入函数中执行
@@ -30,6 +26,8 @@ class Database {
           return;
         }
         let ins = Object.keys(request)[0];
+
+        console.log(ins);
 
 
         //定义一个指令集，接收不同指令返回不同function
@@ -69,8 +67,16 @@ class Database {
 
 
 
+
   getStorage(key, callback) {
+    console.log(key);
+
     chrome.storage.local.get(key, function (result) {
+
+      setTimeout(()=>{
+        console.log(result)
+      },100);
+
       callback(result);
     });
   }
@@ -82,6 +88,7 @@ class Database {
       let accountInfo = storager["accountInfo"] ? storager["accountInfo"] : [];
 
       accountInfo.push(JSON.stringify(value));
+      console.log(accountInfo);
 
       chrome.storage.local.set({ accountInfo });
     });

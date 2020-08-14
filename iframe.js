@@ -11,6 +11,7 @@ class StorageHelper {
   }
 
   getDate(key) {
+
     return new Promise((resolve, reject) => {
       chrome.storage.local.get([key], (result) => {
         resolve(result[key]);
@@ -24,6 +25,7 @@ class StorageHelper {
 
   listen(callback, targetEl) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      console.log(request);
       this.setData(request);
       let value = JSON.parse(request);
 
@@ -134,6 +136,7 @@ class App {
   }
 
   changeBtnDisplay(value, btnEl) {
+
     btnEl.rooEl.style.display = value ? "block" : "none";
   }
 }

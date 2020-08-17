@@ -1,119 +1,3 @@
-// const autoLoginBtn = document.getElementById("allowAutoLogin"); //popup上的自动登录打开按钮
-// const list = document.querySelector(".account-arryy"); //popup上的用户列表
-// const account = document.getElementById("account"); //输入的用户名
-// const password = document.getElementById("password"); //输入的密码
-// const add = document.getElementById("add"); //添加用户按钮
-// const currentLine = document.getElementById("current"); //pop上的当前账号栏
-// autoLoginBtn.disabled = true; //自动登录按钮初始为关闭状态
-
-//判定当前页面是否为163 email，自动登陆按钮是否可以点击
-// let currentTab;
-// chrome.tabs.query({
-//     active: true,
-//     currentWindow: true
-// }, function (tabs) {
-//     if (/:\/\/mail.163.com\/*/g.test(tabs[0].favIconUrl)) {
-//         autoLoginBtn.disabled = false;
-//         currentTab = tabs[0];
-//     }
-// });
-
-//每一次popup打开，判定当前按钮是开是关
-// chrome.storage.local.get(["open"], function (result) {
-//   autoLoginBtn.checked = result.open === undefined ? false : result.open;
-// });
-
-// 自动登录按钮点击事件，显示一键登录按钮在163页面上
-
-// autoLoginBtn.addEventListener("click", function () {
-//   if (currentTab) {
-//     chrome.storage.local.set({ open: autoLoginBtn.checked });
-//     let displayBtn = { enableLogin: autoLoginBtn.checked };
-//     chrome.tabs.sendMessage(
-//       currentTab.id,
-//       JSON.stringify(displayBtn),
-//       (response) => {}
-//     );
-//   }
-// });
-
-//popup打开时,读取当前账户并显示在popup上
-// chrome.extension.sendMessage({ getCurrentAccount: "get" }, function ({
-//   currentAccount,
-// }) {
-//   if (currentAccount && currentAccount.userId) {
-//     currentLine.innerHTML = `<h5>${currentAccount.account}</h5>`;
-//   } else {
-//     currentLine.innerHTML = "";
-//   }
-// });
-
-//读取已记录的账号并显示在popup上
-
-// chrome.extension.sendMessage({ displayArr: "displayArr" }, function ({
-//   accountInfo,
-//   currentAccount,
-// }) {
-//   if (accountInfo) {
-//     console.log(accountInfo);
-//     list.innerHTML = "";
-//     accountInfo.forEach((each) => {
-//       console.log(each);
-//       each = JSON.parse(each);
-//       console.log(each);
-//       addToList(each);
-//     });
-//   }
-//   if (currentAccount && currentAccount.account) {
-//     let selectedTr = document.getElementById("a" + currentAccount.userId);
-//     let label = selectedTr.querySelector(".selected");
-
-//     label.src = currentAccount.label ? "/icon/g1.png" : "/icon/g2.png";
-//   }
-// });
-
-//添加账号按钮绑定动作
-//绑定回车
-// document.addEventListener("keyup", function (e) {
-//   e.key === "Enter" && accountAdding();
-// });
-// //绑定点击
-// add.addEventListener("click", accountAdding);
-
-// function accountAdding() {
-//   if (account.value && password.value) {
-//     let thisAccount = {
-//       account: account.value,
-//       password: password.value,
-//       userId: Date.now(),
-//       label: false,
-//     };
-
-//     chrome.extension.sendMessage({ addAccount: thisAccount }, function (
-//       response
-//     ) {
-//       console.log("this is the :", response);
-//     });
-
-//     //发送账号信息到background后，拉取更新后的用户数组，更新列表
-//     setTimeout(function () {
-//       chrome.extension.sendMessage({ displayAll: "displayArr" }, function ({
-//         accountInfo,
-//       }) {
-//         accountInfo = JSON.parse(accountInfo);
-//         list.innerHTML = "";
-//         accountInfo.forEach((eachAccount) => {
-//           addToList(eachAccount);
-//         });
-//       });
-//     }, 100);
-//   }
-//   account.value = "";
-//   password.value = "";
-//   account.focus();
-// }
-
-
 let currentLine = document.getElementById("current");
 
 //将当前账号信息放入list里，在popup上显示出来
@@ -263,7 +147,6 @@ class TopButton {
 class InputArea {
   constructor() {
     this.init();
-
   }
 
   init() {
@@ -287,24 +170,23 @@ class InputArea {
     this.addBtn.addEventListener("click", ()=>this.accountAdding());
   }
 
-
-
   accountAdding() {
-
-    if (account.value && password.value) {
+    if (this.accountInput.value && this.passwordInput.value) {
       //根据输入的信息生成用户数据，发送到background 数据库
-      let newAccount = this.generateNewAccountData(account, password);
-      chrome.extension.sendMessage({addAccount: newAccount});
+      let newAccount = this.generateNewAccountData(this.accountInput.value, this.passwordInput.value);
+        chrome.extension.sendMessage({addAccount: newAccount});
 
-      let allAccount = new AllAccount();
-      allAccount.updateNewAccountList();
+      setTimeout(()=>{
+        let allAccount = new AllAccount();
+        allAccount.updateNewAccountList();
+      },0.2*1000);
     }
   }
 
   generateNewAccountData(account, password) {
     return {
-      account: account.value,
-      password: password.value,
+      account,
+      password,
       userId: Date.now(),
       label: false
     };
@@ -313,13 +195,9 @@ class InputArea {
 
 }
 
-
-
-
 class AllAccount {
   constructor() {
     this.initList();
-
     this.displayAllAccount();
   }
 
@@ -330,20 +208,20 @@ class AllAccount {
   }
 
   displayAllAccount() {
-    const list = this.list;
-
+    const AllAccount = this;
     chrome.extension.sendMessage({ displayArr: "displayArr" }, function ({
       accountInfo,
       currentAccount,
     }) {
-
-
       if (accountInfo) {
-        list.innerHTML = "";
+        AllAccount.list.innerHTML = "";
         accountInfo.forEach((each) => {
           each = JSON.parse(each);
           addToList(each);
+          AllAccount.addToList(each);
         });
+
+
 
         //如果已经有选中的账号，点亮标记
         if (currentAccount && currentAccount["account"]) {
@@ -358,24 +236,13 @@ class AllAccount {
 
   updateNewAccountList(){
 
-    const list = this.list;
-    console.log("sent");
     chrome.extension.sendMessage({displayAll:"displayArr"},function({accountInfo}){
       console.log(accountInfo);
     });
+  }
 
-  //   setTimeout(function () {
-  //           chrome.extension.sendMessage({ displayAll: "displayArr" }, function ({
-  //             accountInfo,
-  //           }) {
-  //             accountInfo = JSON.parse(accountInfo);
-  //             list.innerHTML = "";
-  //             console.log("now");
-  //             accountInfo.forEach((eachAccount) => {
-  //               addToList(eachAccount);
-  //             });
-  //           });
-  //         }, 0.1*1000);
+  addToList(account){
+    console.log(console.log(account));
   }
 }
 

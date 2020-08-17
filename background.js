@@ -69,7 +69,7 @@ class Database {
 
 
   getStorage(key, callback) {
-    console.log(key);
+
 
     chrome.storage.local.get(key, function (result) {
 

@@ -1,5 +1,4 @@
-
-/******************************************************************** */
+/*********************************************************************/
 
 class Database {
   constructor() {
@@ -9,39 +8,40 @@ class Database {
   listen() {
     const DATABASE = this;
 
-
     //开始监听指令
-    chrome.runtime.onMessage.addListener(function (request,sender,sendResponse) {
+    chrome.runtime.onMessage.addListener(function (
+      request,
+      sender,
+      sendResponse
+    ) {
       const KEEP_CHANNEL_OPEN = true;
 
       //监听到指令立即放入函数中执行
       databaseOperator(request)();
 
-
-
       function databaseOperator(request) {
-
         //取出指令
         if (Object.keys(request).length !== 1) {
           return;
         }
         let ins = Object.keys(request)[0];
 
-        console.log(ins);
-
 
         //定义一个指令集，接收不同指令返回不同function
         const instructionArr = {
           // 每次打开popup，取出数据显示全部账号
           displayArr: function () {
-            DATABASE.getStorage(["accountInfo", "currentAccount"],sendResponse);
+            DATABASE.getStorage(
+              ["accountInfo", "currentAccount"],
+              sendResponse
+            );
           },
           // 每次打开popup，取出数据显示当前选中账号
           currentAccount: function () {
-            DATABASE.getStorage(
-              ["currentAccount"],
-              sendResponse
-            );
+            DATABASE.getStorage(["currentAccount"], sendResponse);
+          },
+          updateAccount: function () {
+            DATABASE.updateAccount(request.updateAccount);
           },
           addAccount: function () {
             DATABASE.setStorage(request.addAccount);
@@ -49,9 +49,9 @@ class Database {
           deleteAccount: function () {
             DATABASE.deleteStorage(request.deleteAccount);
           },
-          labelRecord: function(){
+          labelRecord: function () {
             DATABASE.getLabelRecord(request.labelRecord);
-          }
+          },
         };
 
         return (
@@ -59,42 +59,54 @@ class Database {
         );
       }
 
-
-
       return KEEP_CHANNEL_OPEN;
     });
   }
 
+  updateAccount(updateAccount) {
+    chrome.storage.local.get(["accountInfo"], ({ accountInfo: storager }) => {
+      console.log(storager);
+      let newAccountList = storager.map((each) => {
+        each = JSON.parse(each);
+        if (each.userId === updateAccount.userId) {
+          each = updateAccount;
+        } else {
+          each.label = false;
+        }
+        return JSON.stringify(each);
+      });
 
+      chrome.storage.local.set({ accountInfo: newAccountList });
 
+      let noCurrentAccount = {account:'',password:'',userId:0,label:false};
+      chrome.storage.local.set({
+        currentAccount: updateAccount.label ? updateAccount : noCurrentAccount
+      });
+    });
+  }
 
   getStorage(key, callback) {
 
 
     chrome.storage.local.get(key, function (result) {
 
-      setTimeout(()=>{
-        console.log(result)
-      },100);
-
       callback(result);
     });
   }
 
   setStorage(value) {
-
     chrome.storage.local.get(["accountInfo"], (storager) => {
       //确认是否有用户数组存在，不存在就创建一个
       let accountInfo = storager["accountInfo"] ? storager["accountInfo"] : [];
 
       accountInfo.push(JSON.stringify(value));
-      console.log(accountInfo);
 
       chrome.storage.local.set({ accountInfo });
     });
   }
 
   deleteStorage(dele) {
+
     chrome.storage.local.get(["accountInfo", "currentAccount"], (storager) => {
       let accountArray = storager["accountInfo"];
       let newAccountArray = accountArray.filter((each) => {
@@ -103,29 +115,40 @@ class Database {
       newAccountArray.map((each) => JSON.stringify(each));
       chrome.storage.local.set({ accountInfo: newAccountArray });
 
-
-      if ((storager["currentAccount"])&&(dele.userId === storager["currentAccount"].userId)) {
-        chrome.storage.local.set({ currentAccount: {account:"",password:"",userId:0,label:false} });
+      if (
+        storager["currentAccount"] &&
+        dele.userId === storager["currentAccount"].userId
+      ) {
+        chrome.storage.local.set({
+          currentAccount: {
+            account: "",
+            password: "",
+            userId: 0,
+            label: false,
+          },
+        });
       }
     });
   }
 
   //获取账号是否选中的标记信息
-  getLabelRecord(account){
-
-    chrome.storage.local.get(["currentAccount"],current =>{
-      if(current.userId!== account.userId){
-        chrome.storage.local.set({currentAccount:account});
+  getLabelRecord(account) {
+    chrome.storage.local.get(["currentAccount"], (current) => {
+      if (current.userId !== account.userId) {
+        chrome.storage.local.set({ currentAccount: account });
+      } else {
+        chrome.storage.local.set({
+          currentAccount: {
+            account: "",
+            password: "",
+            userId: 0,
+            label: false,
+          },
+        });
       }
-      else{
-        chrome.storage.local.set({currentAccount:{account:'',password:'',userId:0,label:false}})
-      }
-    })
-
+    });
   }
 }
-
-
 
 class Background {
   constructor() {
@@ -163,8 +186,5 @@ class Background {
     });
   }
 }
-
-
-
 
 new Background();

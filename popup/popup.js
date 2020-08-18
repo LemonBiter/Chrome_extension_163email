@@ -1,91 +1,4 @@
-let currentLine = document.getElementById("current");
-
-//将当前账号信息放入list里，在popup上显示出来
-function addToList(thisAccount) {
-  const list = document.querySelector(".account-array");
-
-
-  let tr = document.createElement("tr");
-  tr.innerHTML = `
-                <td><i><img class="icon selected"  alt=""></i></td>
-                <td>${thisAccount.account}</td>
-                <td><i><img class="icon delete"  src="/icon/delete.png" alt=""></i></td>`;
-
-  tr.querySelector(".selected").src = thisAccount.label
-    ? "/icon/g1.png"
-    : "/icon/g2.png";
-  tr.id = "a" + thisAccount.userId;
-  list.prepend(tr);
-
-  //增加选中动作
-  let currentSelector = tr.querySelector(`.selected`);
-  currentSelector.style = "cursor: pointer";
-  currentSelector.addEventListener("click", () => {
-    //更改账号点击状态并发送给后台用于更新
-    thisAccount.label = !thisAccount.label;
-    chrome.extension.sendMessage({ updateAccount: thisAccount }, function (
-      response
-    ) {
-      console.log(response);
-    });
-    //将popup上被点击的label按钮以外的其他label标记全部置灰
-    let allSelector = document.getElementsByClassName("selected");
-    for (let i = 0; i < allSelector.length; i++) {
-      if (
-        allSelector[i].closest("tr").id !== currentSelector.closest("tr").id
-      ) {
-        allSelector[i].src = "/icon/g2.png";
-      }
-    }
-    //将当前点击的label置亮
-    currentSelector.src = /icon\/g2\.png/g.test(currentSelector.src)
-      ? label_light(thisAccount)
-      : label_Dark();
-  });
-
-  //增加删除动作
-  let deleteCurrent = tr.querySelector(".delete");
-  deleteCurrent.addEventListener("click", () => {
-    //发送要删除的账号信息到background，更新数据库
-    chrome.extension.sendMessage({ deleteAccount: thisAccount }, function (
-      response
-    ) {
-      console.log("deleted account:", response);
-    });
-
-    //如果删除的是当前账号，将popup当前账号栏清空
-    if (/icon\/g1/g.test(tr.querySelector(".selected").src)) {
-      currentLine.innerHTML = `<td></td>`;
-    }
-
-    let index = [].indexOf.call(list.childNodes, tr);
-    list.removeChild(list.children[index]);
-  });
-  deleteCurrent.style = "cursor: pointer";
-}
-
-//取消选中，发送取消信息到background
-function label_Dark() {
-  currentLine.innerHTML = `<td></td>`;
-  chrome.extension.sendMessage({ labelRecord: { account: "", label: false } });
-  return "/icon/g2.png";
-}
-
-//选中，发送选中信息到background
-function label_light(thisAccount) {
-  currentLine.innerHTML = `<h4>${thisAccount.account}</h4>`;
-  chrome.extension.sendMessage({ labelRecord: thisAccount });
-
-  return "/icon/g1.png";
-}
-
 /************************************************************** */
-
-class StorageHelper {
-  getStorage(key, callback) {
-    chrome.storage.local.get(key, callback);
-  }
-}
 
 class TopButton {
   constructor() {
@@ -116,19 +29,17 @@ class TopButton {
       function (tabs) {
         if (/:\/\/mail.163.com\/*/g.test(tabs[0].favIconUrl)) {
           autoLoginBtn.disabled = false;
-          // this.currentTab = tabs[0];
         }
       }
     );
   }
 
   checkBtnOnOff() {
-    let storager = new StorageHelper();
-    storager.getStorage(["open"], (result) => {
-      console.log(result);
-      this.autoLoginBtn.checked =
-        result["open"] === undefined ? false : result["open"];
-    });
+    const topBtn = this;
+    chrome.storage.local.get(["open"],result =>{
+      topBtn.autoLoginBtn.checked =
+      result["open"] === undefined ? false : result["open"];
+    })
   }
 
   clickEventBind() {
@@ -167,20 +78,27 @@ class InputArea {
 
     //监听到按钮点击，触发事件
 
-    this.addBtn.addEventListener("click", ()=>this.accountAdding());
+    this.addBtn.addEventListener("click", () => this.accountAdding());
   }
 
   accountAdding() {
     if (this.accountInput.value && this.passwordInput.value) {
       //根据输入的信息生成用户数据，发送到background 数据库
-      let newAccount = this.generateNewAccountData(this.accountInput.value, this.passwordInput.value);
-        chrome.extension.sendMessage({addAccount: newAccount});
+      let newAccount = this.generateNewAccountData(
+        this.accountInput.value,
+        this.passwordInput.value
+      );
+      chrome.extension.sendMessage({ addAccount: newAccount });
 
-      setTimeout(()=>{
+      setTimeout(() => {
         let allAccount = new AllAccount();
         allAccount.updateNewAccountList();
-      },0.2*1000);
+      }, 0.2 * 1000);
     }
+
+    this.accountInput.value = "";
+    this.passwordInput.value = "";
+    this.accountInput.focus();
   }
 
   generateNewAccountData(account, password) {
@@ -188,11 +106,9 @@ class InputArea {
       account,
       password,
       userId: Date.now(),
-      label: false
+      label: false,
     };
   }
-
-
 }
 
 class AllAccount {
@@ -201,10 +117,9 @@ class AllAccount {
     this.displayAllAccount();
   }
 
-  initList(){
+  initList() {
     const list = document.querySelector(".account-array");
     this.list = list;
-
   }
 
   displayAllAccount() {
@@ -217,34 +132,109 @@ class AllAccount {
         AllAccount.list.innerHTML = "";
         accountInfo.forEach((each) => {
           each = JSON.parse(each);
-          addToList(each);
+
           AllAccount.addToList(each);
         });
-
 
 
         //如果已经有选中的账号，点亮标记
         if (currentAccount && currentAccount["account"]) {
           let selectedTr = document.getElementById("a" + currentAccount.userId);
           let label = selectedTr.querySelector(".selected");
-
           label.src = currentAccount.label ? "/icon/g1.png" : "/icon/g2.png";
+
+          //讲选中账号放到当前账号行中
+          AllAccount.updateCurrentAccount();
+        }
+        else{
+          let currentLine = document.getElementById("current");
+              currentLine.innerHTML = '';
+
         }
       }
     });
   }
 
-  updateNewAccountList(){
 
-    chrome.extension.sendMessage({displayAll:"displayArr"},function({accountInfo}){
-      console.log(accountInfo);
+  updateCurrentAccount() {
+    new CurrentAccount();
+  }
+
+  updateNewAccountList() {
+    chrome.extension.sendMessage({ displayAll: "displayArr" });
+  }
+
+  addToList(account) {
+    //生成列表中的每一个账号
+    let eachInList = this.generateEachAccountInList(account);
+    this.list.prepend(eachInList);
+    //给每个账号绑定选择事件
+    this.selectionLabelBinding(eachInList, account);
+    this.deleteLabelBinding(eachInList, account);
+  }
+
+  generateEachAccountInList(account) {
+    let tr = document.createElement("tr");
+    tr.innerHTML = `
+                  <td><i><img class="icon selected"  alt=""></i></td>
+                  <td>${account.account}</td>
+                  <td><i><img class="icon delete"  src="/icon/delete.png" alt=""></i></td>`;
+    tr.querySelector(".selected").src = account.label
+      ? "/icon/g1.png"
+      : "/icon/g2.png";
+    tr.id = "a" + account.userId;
+
+    return tr;
+  }
+
+  selectionLabelBinding(eachAccount, accountObj) {
+    const AllAccount = this;
+    let currentSelector = eachAccount.querySelector(".selected");
+    currentSelector.style = "cursor: pointer";
+    currentSelector.addEventListener("click", () => {
+      accountObj.label = !accountObj.label;
+
+      chrome.extension.sendMessage({ updateAccount: accountObj });
+
+      setTimeout(() => {
+        this.displayAllAccount();
+      }, 0.2 * 1000);
     });
   }
 
-  addToList(account){
-    console.log(console.log(account));
+  deleteLabelBinding(eachAccount, accountObj) {
+    let deleteCurrent = eachAccount.querySelector(".delete");
+    deleteCurrent.style = "cursor: pointer";
+    deleteCurrent.addEventListener("click", () => {
+      chrome.extension.sendMessage({ deleteAccount: accountObj });
+
+      setTimeout(() => {
+        this.displayAllAccount();
+      }, 0.1 * 1000);
+    });
   }
 }
+
+class CurrentAccount{
+  constructor(){
+    this.init();
+  }
+
+  init(){
+    let currentLine = document.getElementById("current");
+    chrome.extension.sendMessage(
+      { currentAccount: "currentAccount" },
+      function ({ currentAccount }) {
+        currentLine.innerHTML = currentAccount? `<h5>${currentAccount["account"]}</h5>`: "";
+      }
+    );
+  }
+}
+
+
+
+
+
 
 class App {
   constructor() {
@@ -267,15 +257,8 @@ class App {
   }
 
   currentAccountInit() {
-    let currentLine = document.getElementById("current");
-    chrome.extension.sendMessage(
-      { currentAccount: "currentAccount" },
-      function ({ currentAccount }) {
-        if (currentAccount)
-          currentLine.innerHTML = `<h5>${currentAccount["account"]}</h5>`;
-        else currentLine.innerHTML = "";
-      }
-    );
+    const currentAccout = new CurrentAccount();
+
   }
 
   allAccountInit() {

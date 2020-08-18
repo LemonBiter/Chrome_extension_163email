@@ -25,7 +25,6 @@ class StorageHelper {
 
   listen(callback, targetEl) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      console.log(request);
       this.setData(request);
       let value = JSON.parse(request);
 
@@ -90,7 +89,7 @@ class App {
   }
 
   checkAccountExist({ currentAccount }) {
-    if (!currentAccount["account"]) {
+    if (!currentAccount||!currentAccount["account"]) {
       this.submitBtn.updateBtnText("未选中账号");
       setTimeout(() => {
         this.submitBtn.updateBtnText("一键登录");
@@ -104,7 +103,7 @@ class App {
   }
 
   applySelectedAccount({ currentAccount }) {
-    if (!currentAccount.account) return;
+    if (!currentAccount||!currentAccount.account) return;
     this.initTargetEl();
     this.targetAccountInputEl.value = currentAccount["account"];
     this.targetPwdInputEl.value = currentAccount["password"];
@@ -136,7 +135,6 @@ class App {
   }
 
   changeBtnDisplay(value, btnEl) {
-
     btnEl.rooEl.style.display = value ? "block" : "none";
   }
 }
